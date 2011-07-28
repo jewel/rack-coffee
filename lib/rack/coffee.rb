@@ -18,11 +18,12 @@ module Rack
       @server = opts[:static] ? Rack::File.new(root) : app
       @cache = opts[:cache]
       @ttl = opts[:ttl] || 86400
+      @bare = opts[:nowrap] || opts[:bare]
       @join = opts[:join]
     end
     
     def brew(coffee)
-      CoffeeScript.compile IO.read(coffee)
+      CoffeeScript.compile coffee, { :no_wrap => @bare }
     end
 
     def not_modified
@@ -54,9 +55,10 @@ module Rack
       if @join == F.basename(coffee, '.coffee')
         dir = F.dirname(coffee)
         modified_time = Dir["#{dir}/*.coffee"].map{|f| F.mtime(f) }.max
-        coffee = "#{dir}/"
+        coffee = Dir["#{dir}/*.coffee"].map{|f| F.read(f)}.join("\n")
       elsif F.file?(coffee)
         modified_time = F.mtime(coffee)
+        coffee = F.read(coffee)
       end
       if modified_time
         return not_modified if check_modified_time(env, modified_time)

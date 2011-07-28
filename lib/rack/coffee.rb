@@ -22,7 +22,7 @@ module Rack
     end
     
     def brew(coffee)
-      CoffeeScript.compile File.read(coffee)
+      CoffeeScript.compile IO.read(coffee)
     end
 
     def not_modified
